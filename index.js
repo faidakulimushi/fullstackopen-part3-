@@ -5,40 +5,59 @@ app.use(express.json())
 
 let persons = [
   {
-    id: 1,
+    id: "1",
     name: "Arto Hellas",
     number: "040-123456"
   },
   {
-    id: 2,
+    id: "2",
     name: "Ada Lovelace",
     number: "39-44-5323523"
   },
   {
-    id: 3,
+    id: "3",
     name: "Dan Abramov",
     number: "12-43-234345"
+  },
+  {
+    id: "4",
+    name: "Mary Poppendieck",
+    number: "39-23-6423122"
   }
 ]
 
-// all persons
-app.get('/api/persons', (request, response) => {
-  response.json(persons)
+// Home route
+app.get('/', (req, res) => {
+  res.send('<h1>Phonebook Backend</h1>')
 })
 
-// single person
-app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
+// Get all persons
+app.get('/api/persons', (req, res) => {
+  res.json(persons)
+})
 
-  const person = persons.find(person => person.id === id)
+// Get single person by id (optional but useful)
+app.get('/api/persons/:id', (req, res) => {
+  const id = req.params.id
+  const person = persons.find(p => p.id === id)
 
-  if (person) {
-    response.json(person)
-  } else {
-    response.status(404).end()
+  if (!person) {
+    return res.status(404).json({ error: 'person not found' })
   }
+
+  res.json(person)
 })
 
-app.listen(3001, () => {
-  console.log('Server running on port 3001')
+// DELETE a person (Step 3.4 requirement)
+app.delete('/api/persons/:id', (req, res) => {
+  const id = req.params.id
+  persons = persons.filter(person => person.id !== id)
+
+  res.status(204).end()
+})
+
+// Start server
+const PORT = 3001
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
 })
