@@ -59,6 +59,12 @@ app.post('/api/persons', (req, res) => {
     })
   }
 
+  const exist = persons.find(p => p.name === body.name)
+  if (exist) {
+    return res.status(400).json({
+      error: 'name must be unique'
+    })
+  }
   const generatedId = () => {
     const maxId = persons.length > 0
       ? Math.max(...persons.map(n => Number(n.id)))
