@@ -26,17 +26,19 @@ let persons = [
   }
 ]
 
-// Home route
 app.get('/', (req, res) => {
   res.send('<h1>Hello there!</h1>')
 })
 
-// Get all persons
 app.get('/api/persons', (req, res) => {
   res.json(persons)
 })
 
-// Start server
+app.get('/info',(req, res) => {
+  const date = new Date()
+  res.send(`<p>Phonebook has info for ${persons.length} people</p><p>${date}</p>`)
+})   
+
 const PORT = 3001
 
 app.listen(PORT, () => {
