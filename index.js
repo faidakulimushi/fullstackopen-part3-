@@ -4,7 +4,16 @@ const morgan = require('morgan')
 const app = express()
 
 app.use(express.json())
-app.use(morgan('tiny'))
+
+
+morgan.token('body', (req) => {
+  return JSON.stringify(req.body)
+})
+
+
+app.use(
+  morgan(':method :url :status - :response-time ms :body')
+)
 
 let persons = [
   {
@@ -29,17 +38,17 @@ let persons = [
   }
 ]
 
-// Home route
+
 app.get('/', (req, res) => {
-  res.send('<h1>Phonebook Backend started</h1>')
+  res.send('<h1>Phonebook Backend</h1>')
 })
 
-// Get all persons
+
 app.get('/api/persons', (req, res) => {
   res.json(persons)
 })
 
-// Get one person
+
 app.get('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id)
   const person = persons.find(p => p.id === id)
@@ -51,7 +60,7 @@ app.get('/api/persons/:id', (req, res) => {
   }
 })
 
-// Info page
+
 app.get('/info', (req, res) => {
   const date = new Date()
 
@@ -61,7 +70,7 @@ app.get('/info', (req, res) => {
   `)
 })
 
-// Delete person
+
 app.delete('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id)
   persons = persons.filter(p => p.id !== id)
@@ -69,7 +78,7 @@ app.delete('/api/persons/:id', (req, res) => {
   res.status(204).end()
 })
 
-// Add person
+
 app.post('/api/persons', (req, res) => {
   const body = req.body
 
@@ -99,6 +108,7 @@ app.post('/api/persons', (req, res) => {
 })
 
 const PORT = 3001
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
