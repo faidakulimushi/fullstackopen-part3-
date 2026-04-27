@@ -1,38 +1,45 @@
 const express = require('express')
+const morgan = require('morgan')
+
 const app = express()
 
 app.use(express.json())
+app.use(morgan('tiny'))
 
 let persons = [
   {
     id: 1,
-    name: 'Arto Hellas',
-    number: '040-123456'
+    name: "Arto Hellas",
+    number: "040-123456"
   },
   {
     id: 2,
-    name: 'Ada Lovelace',
-    number: '39-44-5323523'
+    name: "Ada Lovelace",
+    number: "39-44-5323523"
   },
   {
     id: 3,
-    name: 'Dan Abramov',
-    number: '12-43-234345'
+    name: "Dan Abramov",
+    number: "12-43-234345"
+  },
+  {
+    id: 4,
+    name: "Mary Poppendieck",
+    number: "39-23-6423122"
   }
 ]
 
+// Home route
+app.get('/', (req, res) => {
+  res.send('<h1>Phonebook Backend started</h1>')
+})
+
+// Get all persons
 app.get('/api/persons', (req, res) => {
   res.json(persons)
 })
 
-app.get('/info', (req, res) => {
-  res.send(`
-    Phonebook has info for ${persons.length} people
-    <br/>
-    ${new Date()}
-  `)
-})
-
+// Get one person
 app.get('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id)
   const person = persons.find(p => p.id === id)
@@ -44,6 +51,17 @@ app.get('/api/persons/:id', (req, res) => {
   }
 })
 
+// Info page
+app.get('/info', (req, res) => {
+  const date = new Date()
+
+  res.send(`
+    <p>Phonebook has info for ${persons.length} people</p>
+    <p>${date}</p>
+  `)
+})
+
+// Delete person
 app.delete('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id)
   persons = persons.filter(p => p.id !== id)
@@ -51,36 +69,33 @@ app.delete('/api/persons/:id', (req, res) => {
   res.status(204).end()
 })
 
+// Add person
 app.post('/api/persons', (req, res) => {
   const body = req.body
-  if (!body.name ) {
+
+  if (!body.name || !body.number) {
     return res.status(400).json({
       error: 'name or number is missing'
     })
   }
 
-  const exist = persons.find(p => p.name === body.name)
-  if (exist) {
+  const nameExists = persons.find(p => p.name === body.name)
+
+  if (nameExists) {
     return res.status(400).json({
       error: 'name must be unique'
     })
   }
-  const generatedId = () => {
-    const maxId = persons.length > 0
-      ? Math.max(...persons.map(n => Number(n.id)))
-      : 0
-    return String(maxId + 1)
-  }
 
-  const person = {
-    id: generatedId(),
+  const newPerson = {
+    id: Math.floor(Math.random() * 10000),
     name: body.name,
     number: body.number
   }
 
-  persons = persons.concat(person)
+  persons = persons.concat(newPerson)
 
-  res.json(person)
+  res.json(newPerson)
 })
 
 const PORT = 3001
