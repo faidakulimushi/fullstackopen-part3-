@@ -1,67 +1,46 @@
+// phonebook-backend/index.js
+
 const express = require('express')
-const morgan = require('morgan')
+const cors = require('cors')
+const fs = require('fs')
 
 const app = express()
+const PORT = 3001
+const filePath = './db.json'
 
+app.use(cors())
+app.use(express.static('dist'))
 app.use(express.json())
 
+ 
 
-morgan.token('body', (req) => {
-  return JSON.stringify(req.body)
-})
+// ---------- Helpers ----------
+const getPersons = () => {
+  const data = fs.readFileSync(filePath, 'utf8')
+  return JSON.parse(data).persons
+}
 
+const savePersons = (persons) => {
+  fs.writeFileSync(
+    filePath,
+    JSON.stringify({ persons }, null, 2)
+  )
+}
 
-app.use(
-  morgan(':method :url :status - :response-time ms :body')
-)
+const generateId = () => {
+  return Math.floor(Math.random() * 1000000)
+}
 
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456"
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523"
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345"
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122"
-  }
-]
+// ---------- Routes ----------
 
-
+// Home
 app.get('/', (req, res) => {
-  res.send('<h1>Phonebook Backend</h1>')
+  res.send('<h1>Phonebook Backend Running</h1>')
 })
 
-
-app.get('/api/persons', (req, res) => {
-  res.json(persons)
-})
-
-
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const person = persons.find(p => p.id === id)
-
-  if (person) {
-    res.json(person)
-  } else {
-    res.status(404).end()
-  }
-})
-
-
+// Info page
 app.get('/info', (req, res) => {
+  const persons = getPersons()
   const date = new Date()
 
   res.send(`
@@ -70,45 +49,79 @@ app.get('/info', (req, res) => {
   `)
 })
 
-
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  persons = persons.filter(p => p.id !== id)
-
-  res.status(204).end()
+// Get all persons
+app.get('/api/persons', (req, res) => {
+  res.json(getPersons())
 })
 
+// Get one person
+app.get('/api/persons/:id', (req, res) => {
+  const id = Number(req.params.id)
+  const persons = getPersons()
 
+  const person = persons.find(p => p.id === id)
+
+  if (person) {
+    res.json(person)
+  } else {
+    res.status(404).json({ error: 'person not found' })
+  }
+})
+
+// Add person
 app.post('/api/persons', (req, res) => {
   const body = req.body
+  const persons = getPersons()
 
   if (!body.name || !body.number) {
     return res.status(400).json({
-      error: 'name or number is missing'
+      error: 'name or number missing'
     })
   }
 
-  const nameExists = persons.find(p => p.name === body.name)
+  const exists = persons.find(
+    p => p.name.toLowerCase() === body.name.toLowerCase()
+  )
 
-  if (nameExists) {
+  if (exists) {
     return res.status(400).json({
       error: 'name must be unique'
     })
   }
 
   const newPerson = {
-    id: Math.floor(Math.random() * 10000),
+    id: generateId(),
     name: body.name,
     number: body.number
   }
 
-  persons = persons.concat(newPerson)
+  persons.push(newPerson)
+  savePersons(persons)
 
   res.json(newPerson)
 })
 
-const PORT = 3001
+// Delete person
+app.delete('/api/persons/:id', (req, res) => {
+  const id = Number(req.params.id)
 
+  const persons = getPersons().filter(
+    p => p.id !== id
+  )
+
+  savePersons(persons)
+
+  res.status(204).end()
+})
+
+// Unknown endpoint
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'unknown endpoint'
+  })
+})
+
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
