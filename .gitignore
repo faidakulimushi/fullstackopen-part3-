@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 # env file
 .env
 
 node_modules
+=======
+
+/node_modules
+>>>>>>> ccd4b179b518d65099327328031c44664e2f165a
